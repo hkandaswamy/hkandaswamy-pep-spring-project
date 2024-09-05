@@ -2,12 +2,14 @@ package com.example.repository;
 
 import com.example.entity.Message;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+@Repository
 public interface MessageRepository extends JpaRepository<Message, Integer>{
 
-    Message deleteByMessageId(Integer messageId);
+    Integer deleteByMessageId(int messageId);
 
-    List<Message> findMessagesByPostedBy(Integer accountId);
+    List<Message> findMessagesByPostedBy(int accountId);
 }

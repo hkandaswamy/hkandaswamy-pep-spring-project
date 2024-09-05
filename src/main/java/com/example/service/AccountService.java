@@ -21,10 +21,10 @@ public class AccountService {
     }
 
     public Account createAccount(Account account) {
-        if(accountRepository.getById(account.getAccountId()) != null) {
-            return new Account("CONFLICT", "CONFLICT");
+        if(accountRepository.findAccountByUsername(account.getUsername()) != null) {
+            return new Account(409, "CONFLICT", "CONFLICT");
         }
-        if((account.getUsername() != "") && (account.getPassword().length() >= 4) && (accountRepository.getById(account.getAccountId()) == null)) {
+        if((account.getUsername() != "") && (account.getPassword().length() >= 4)) {
             return accountRepository.save(account);
         }
         return null;
@@ -34,5 +34,11 @@ public class AccountService {
         return accountRepository.findAccountByUsernameAndPassword(account.getUsername(), account.getPassword());
     }
 
+    public boolean checkAccountExists(int accountId) {
+        if(accountRepository.findById(accountId).isPresent()) {
+            return true;
+        }
+        return false;
+    }
 
 }

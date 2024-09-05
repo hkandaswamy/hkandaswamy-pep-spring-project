@@ -26,13 +26,13 @@ public class SocialMediaController {
     @Autowired
     MessageService messageService;
 
-    @PostMapping("/register/")
+    @PostMapping("/register")
     public ResponseEntity<Account> createAccountHandler(@RequestBody Account account) {
         Account createdAccount = accountService.createAccount(account);
         if(createdAccount == null) {
             return new ResponseEntity<Account>(HttpStatus.BAD_REQUEST); 
         }
-        else if(createdAccount.getUsername().equals("CONFLICT")) { // find a better way to do this lmao
+        else if(createdAccount.getAccountId() == 409) { // find a better way to do this lmao
             return new ResponseEntity<Account>(HttpStatus.CONFLICT);
         }
         return new ResponseEntity<Account>(createdAccount, HttpStatus.OK);
@@ -48,8 +48,8 @@ public class SocialMediaController {
     }
 
     @PostMapping("/messages")
-    public ResponseEntity<Message> createMessage(@RequestBody Message message) {
-        Message createdMessage = messageService.createMessage(message);
+    public ResponseEntity<Message> createMessageHandler(@RequestBody Message message) {
+        Message createdMessage = messageService.createMessage(message, accountService.checkAccountExists(message.getPostedBy()));
         if(createdMessage == null) {
             return new ResponseEntity<Message>(HttpStatus.BAD_REQUEST);
         }
@@ -57,25 +57,25 @@ public class SocialMediaController {
     }
 
     @GetMapping("/messages")
-    public ResponseEntity<List<Message>> getAllMessages() {
+    public ResponseEntity<List<Message>> getAllMessagesHandler() {
         List<Message> messages = messageService.getMessages();
         return new ResponseEntity<List<Message>>(messages, HttpStatus.OK);
     }
 
     @GetMapping("/messages/{message_id}")
-    public ResponseEntity<Message> getMessage(@RequestParam int message_id) {
+    public ResponseEntity getMessageHandler(@PathVariable int message_id) {
         Message obtainedMessage = messageService.findMessage(message_id);
         return new ResponseEntity<Message>(obtainedMessage, HttpStatus.OK);
     }
 
     @DeleteMapping("/messages/{message_id}")
-    public ResponseEntity<Message> deleteMessage(@RequestParam int message_id) {
-        Message deletedMessage = messageService.deleteMessage(message_id);
-        return new ResponseEntity<Message>(deletedMessage, HttpStatus.OK);
+    public ResponseEntity<Integer> deleteMessageHandler(@PathVariable int message_id) {
+        Integer deletedMessage = messageService.deleteMessage(message_id);
+        return new ResponseEntity<Integer>(deletedMessage, HttpStatus.OK);
     }
 
     @PatchMapping("/messages/{message_id}")
-    public ResponseEntity<Integer> updateMessage(@RequestParam int message_id, @RequestBody Message message) {
+    public ResponseEntity<Integer> updateMessageHandler(@PathVariable int message_id, @RequestBody Message message) {
         Integer updatedMessage = messageService.updateMessage(message_id, message.getMessageText());
         if(updatedMessage == null) {
             return new ResponseEntity<Integer>(HttpStatus.BAD_REQUEST);
@@ -84,7 +84,7 @@ public class SocialMediaController {
     }
 
     @GetMapping("/accounts/{account_id}/messages")
-    public ResponseEntity<List<Message>> getMessagesFromUser(@RequestParam int account_id) {
+    public ResponseEntity<List<Message>> getMessagesFromUserHandler(@PathVariable int account_id) {
         List<Message> usersMessages = messageService.getMessagesFromUser(account_id);
         return new ResponseEntity<List<Message>>(usersMessages, HttpStatus.OK);
     }
