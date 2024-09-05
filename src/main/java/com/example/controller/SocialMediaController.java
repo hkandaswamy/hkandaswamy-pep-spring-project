@@ -1,5 +1,15 @@
 package com.example.controller;
 
+import com.example.entity.*;
+import com.example.service.*;
+
+import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import java.util.List;
+
 
 /**
  * TODO: You will need to write your own endpoints and handlers for your controller using Spring. The endpoints you will need can be
@@ -7,6 +17,75 @@ package com.example.controller;
  * where applicable as well as the @ResponseBody and @PathVariable annotations. You should
  * refer to prior mini-project labs and lecture materials for guidance on how a controller may be built.
  */
+@RestController
 public class SocialMediaController {
 
+    @Autowired
+    AccountService accountService;
+
+    @Autowired
+    MessageService messageService;
+
+    @PostMapping("/register/")
+    public ResponseEntity<Account> createAccountHandler(@RequestBody Account account) {
+        Account createdAccount = accountService.createAccount(account);
+        if(createdAccount == null) {
+            return new ResponseEntity<Account>(HttpStatus.BAD_REQUEST); 
+        }
+        else if(createdAccount.getUsername().equals("CONFLICT")) { // find a better way to do this lmao
+            return new ResponseEntity<Account>(HttpStatus.CONFLICT);
+        }
+        return new ResponseEntity<Account>(createdAccount, HttpStatus.OK);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<Account> loginHandler(@RequestBody Account account) {
+        Account loginAccount = accountService.getAccountByUsernameAndPassword(account);
+        if(loginAccount == null) {
+            return new ResponseEntity<Account>(HttpStatus.UNAUTHORIZED);
+        }
+        return new ResponseEntity<Account>(loginAccount, HttpStatus.OK);
+    }
+
+    @PostMapping("/messages")
+    public ResponseEntity<Message> createMessage(@RequestBody Message message) {
+        Message createdMessage = messageService.createMessage(message);
+        if(createdMessage == null) {
+            return new ResponseEntity<Message>(HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<Message>(createdMessage, HttpStatus.OK);
+    }
+
+    @GetMapping("/messages")
+    public ResponseEntity<List<Message>> getAllMessages() {
+        List<Message> messages = messageService.getMessages();
+        return new ResponseEntity<List<Message>>(messages, HttpStatus.OK);
+    }
+
+    @GetMapping("/messages/{message_id}")
+    public ResponseEntity<Message> getMessage(@RequestParam int message_id) {
+        Message obtainedMessage = messageService.findMessage(message_id);
+        return new ResponseEntity<Message>(obtainedMessage, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/messages/{message_id}")
+    public ResponseEntity<Message> deleteMessage(@RequestParam int message_id) {
+        Message deletedMessage = messageService.deleteMessage(message_id);
+        return new ResponseEntity<Message>(deletedMessage, HttpStatus.OK);
+    }
+
+    @PatchMapping("/messages/{message_id}")
+    public ResponseEntity<Integer> updateMessage(@RequestParam int message_id, @RequestBody Message message) {
+        Integer updatedMessage = messageService.updateMessage(message_id, message.getMessageText());
+        if(updatedMessage == null) {
+            return new ResponseEntity<Integer>(HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<Integer>(updatedMessage, HttpStatus.OK);
+    }
+
+    @GetMapping("/accounts/{account_id}/messages")
+    public ResponseEntity<List<Message>> getMessagesFromUser(@RequestParam int account_id) {
+        List<Message> usersMessages = messageService.getMessagesFromUser(account_id);
+        return new ResponseEntity<List<Message>>(usersMessages, HttpStatus.OK);
+    }
 }
